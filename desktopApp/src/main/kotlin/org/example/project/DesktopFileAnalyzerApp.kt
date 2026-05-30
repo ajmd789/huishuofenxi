@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,6 +51,8 @@ fun DesktopFileAnalyzerApp() {
     // 顶层状态都放在界面入口，便于后续逐步替换成 ViewModel 或状态容器。
     var directoryPath by remember { mutableStateOf(XlsxScanner.defaultRootPath()) }
     var isLoading by remember { mutableStateOf(false) }
+    var showLatestDataDialog by remember { mutableStateOf(false) }
+    var showTxtFinderDialog by remember { mutableStateOf(false) }
     var scanResult by remember {
         mutableStateOf(
             XlsxScanResult(
@@ -63,6 +66,7 @@ fun DesktopFileAnalyzerApp() {
             ),
         )
     }
+    val latestFileInfo = scanResult.files.firstOrNull()
 
     fun launchScan(path: String) {
         val normalizedPath = path.trim()
@@ -108,11 +112,12 @@ fun DesktopFileAnalyzerApp() {
                     OutlinedTextField(
                         value = directoryPath,
                         onValueChange = { directoryPath = it },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.fillMaxWidth(0.65f),
                         label = { Text("扫描目录") },
                         singleLine = true,
                         enabled = !isLoading,
                     )
+                    Spacer(modifier = Modifier.weight(1f))
                     Button(
                         onClick = { launchScan(directoryPath) },
                         enabled = !isLoading,
@@ -127,6 +132,20 @@ fun DesktopFileAnalyzerApp() {
                         enabled = !isLoading,
                     ) {
                         Text("恢复默认")
+                    }
+                    if (scanResult.totalFileCount != 0) {
+                        Button(
+                            onClick = { showLatestDataDialog = true },
+                            enabled = !isLoading && latestFileInfo != null,
+                        ) {
+                            Text("最新数据")
+                        }
+                    }
+                    Button(
+                        onClick = { showTxtFinderDialog = true },
+                        enabled = !isLoading,
+                    ) {
+                        Text("查找TXT")
                     }
                 }
 
@@ -163,6 +182,20 @@ fun DesktopFileAnalyzerApp() {
                 }
             }
         }
+    }
+
+    if (showLatestDataDialog && latestFileInfo != null) {
+        org.example.project.LatestDataDialog(
+            fileInfo = latestFileInfo,
+            onDismissRequest = { showLatestDataDialog = false },
+        )
+    }
+
+    if (showTxtFinderDialog) {
+        TxtFinderDialog(
+            initialPath = directoryPath,
+            onDismissRequest = { showTxtFinderDialog = false },
+        )
     }
 }
 
