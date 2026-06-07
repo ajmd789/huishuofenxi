@@ -1,6 +1,9 @@
 package org.example.project
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -64,91 +67,117 @@ fun TxtFinderDialog(
         title = "TXT 文件查找",
         onDismissRequest = onDismissRequest,
     ) {
-        Text(
-            text = "递归查找目录下的 .txt 文件",
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
-        )
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            OutlinedTextField(
-                value = directoryPath,
-                onValueChange = { directoryPath = it },
-                modifier = Modifier.weight(1f),
-                label = { Text("扫描目录") },
-                singleLine = true,
-                enabled = !isLoading,
-            )
-            Button(
-                onClick = { launchScan(directoryPath) },
-                enabled = !isLoading,
-            ) {
-                Text("扫描")
-            }
-        }
+        BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+            val rowSpacing = (maxWidth * 0.012f).coerceIn(8.dp, 14.dp)
+            val blockSpacing = (maxWidth * 0.02f).coerceIn(8.dp, 14.dp)
+            val listItemSpacing = (maxWidth * 0.015f).coerceIn(6.dp, 10.dp)
+            val cardPadding = (maxWidth * 0.02f).coerceIn(8.dp, 14.dp)
 
-        if (isLoading) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(blockSpacing),
+            ) {
+            Text(
+                text = "递归查找目录下的 .txt 文件",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(rowSpacing),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(18.dp),
-                    strokeWidth = 2.dp,
+                OutlinedTextField(
+                    value = directoryPath,
+                    onValueChange = { directoryPath = it },
+                    modifier = Modifier.weight(1f),
+                    label = { Text("扫描目录") },
+                    singleLine = true,
+                    enabled = !isLoading,
                 )
-                Text("扫描中...")
-            }
-        }
-
-        Text("当前目录: ${scanResult.rootPath}")
-        Text("状态: ${scanResult.message}")
-        Text("文件数: ${scanResult.totalFileCount}")
-        HorizontalDivider()
-
-        if (scanResult.files.isEmpty() && !isLoading) {
-            Text(
-                text = "暂无 .txt 文件",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            return@LatestDataDialog
-        }
-
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(260.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            items(
-                items = scanResult.files,
-                key = { fileInfo -> fileInfo.absolutePath },
-            ) { fileInfo ->
-                Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    tonalElevation = 1.dp,
-                    shape = MaterialTheme.shapes.medium,
+                Button(
+                    onClick = { launchScan(directoryPath) },
+                    enabled = !isLoading,
                 ) {
-                    Column(
-                        modifier = Modifier.padding(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    Text("扫描")
+                }
+            }
+
+            if (isLoading) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(rowSpacing),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                    )
+                    Text("扫描中...")
+                }
+            }
+
+            Text("当前目录: ${scanResult.rootPath}")
+            Text("状态: ${scanResult.message}")
+            Text("文件数: ${scanResult.totalFileCount}")
+            HorizontalDivider()
+
+            if (scanResult.files.isEmpty() && !isLoading) {
+                Text(
+                    text = "暂无 .txt 文件",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                return@Column
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(260.dp),
+                verticalArrangement = Arrangement.spacedBy(listItemSpacing),
+            ) {
+                items(
+                    items = scanResult.files,
+                    key = { fileInfo -> fileInfo.absolutePath },
+                ) { fileInfo ->
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        tonalElevation = 1.dp,
+                        shape = MaterialTheme.shapes.medium,
                     ) {
-                        Text(
-                            text = fileInfo.fileName,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = fileInfo.absolutePath,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Column(
+                            modifier = Modifier.padding(cardPadding),
+                            verticalArrangement = Arrangement.spacedBy(blockSpacing),
+                        ) {
+                            Text(
+                                text = fileInfo.fileName,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                            ScrollableLineText(
+                                text = fileInfo.absolutePath,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
                     }
                 }
             }
         }
+        }
     }
+}
+
+@Composable
+private fun ScrollableLineText(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    val scrollState = rememberScrollState()
+    Text(
+        text = text,
+        modifier = modifier.horizontalScroll(scrollState),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+    )
 }

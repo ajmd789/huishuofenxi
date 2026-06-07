@@ -1,6 +1,10 @@
 package org.example.project
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -39,7 +43,7 @@ fun LatestDataDialog(
             fontWeight = FontWeight.Bold,
         )
         Text("文件名: ${fileInfo.fileName}")
-        Text("完整路径: ${fileInfo.absolutePath}")
+        HorizontalScrollableText(text = "完整路径: ${fileInfo.absolutePath}")
         Text("修改时间: ${fileInfo.lastModified.formatForDisplay()}")
         Text("文件大小: ${fileInfo.sizeBytes.formatFileSize()}")
         Text("Sheet 数: ${fileInfo.sheetCount}")
@@ -71,20 +75,38 @@ fun LatestDataDialog(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 4.dp,
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                content()
-                Button(
-                    onClick = onDismissRequest,
-                    modifier = Modifier.align(Alignment.End),
+            BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+                val dialogPadding = (maxWidth * 0.04f).coerceIn(14.dp, 28.dp)
+                val dialogSpacing = (maxWidth * 0.02f).coerceIn(8.dp, 14.dp)
+                val scrollState = rememberScrollState()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(dialogPadding)
+                        .verticalScroll(scrollState),
+                    verticalArrangement = Arrangement.spacedBy(dialogSpacing),
                 ) {
-                    Text("关闭")
+                    content()
+                    Button(
+                        onClick = onDismissRequest,
+                        modifier = Modifier.align(Alignment.End),
+                    ) {
+                        Text("关闭")
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun HorizontalScrollableText(text: String) {
+    val scrollState = rememberScrollState()
+    Text(
+        text = text,
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(scrollState),
+        maxLines = 1,
+    )
 }

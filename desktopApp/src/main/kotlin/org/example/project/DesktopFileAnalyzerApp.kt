@@ -2,9 +2,9 @@ package org.example.project
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -86,97 +87,126 @@ fun DesktopFileAnalyzerApp() {
 
     MaterialTheme {
         Surface(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Text(
-                    text = "Excel 文件分析器",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = "默认扫描目录下的所有 .xlsx 文件，并展示基础元数据与工作簿统计信息。",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val pagePadding = (maxWidth * 0.02f).coerceIn(12.dp, 28.dp)
+                val sectionSpacing = (maxHeight * 0.02f).coerceIn(12.dp, 20.dp)
+                val rowSpacing = (maxWidth * 0.012f).coerceIn(8.dp, 14.dp)
+                val listSpacing = (maxHeight * 0.015f).coerceIn(10.dp, 16.dp)
+                val emptyStateHeight = (maxHeight * 0.25f).coerceIn(180.dp, 320.dp)
+                val isCompact = maxWidth < 900.dp
 
-                // 顶部操作区负责路径录入与手动触发扫描。
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(pagePadding),
+                    verticalArrangement = Arrangement.spacedBy(sectionSpacing),
                 ) {
-                    OutlinedTextField(
-                        value = directoryPath,
-                        onValueChange = { directoryPath = it },
-                        modifier = Modifier.fillMaxWidth(0.65f),
-                        label = { Text("扫描目录") },
-                        singleLine = true,
-                        enabled = !isLoading,
+                    Text(
+                        text = "Excel 文件分析器",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
                     )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Button(
-                        onClick = { launchScan(directoryPath) },
-                        enabled = !isLoading,
-                    ) {
-                        Text("开始扫描")
-                    }
-                    TextButton(
-                        onClick = {
-                            directoryPath = XlsxScanner.defaultRootPath()
-                            launchScan(directoryPath)
-                        },
-                        enabled = !isLoading,
-                    ) {
-                        Text("恢复默认")
-                    }
-                    if (scanResult.totalFileCount != 0) {
-                        Button(
-                            onClick = { showLatestDataDialog = true },
-                            enabled = !isLoading && latestFileInfo != null,
+                    Text(
+                        text = "默认扫描目录下的所有 .xlsx 文件，并展示基础元数据与工作簿统计信息。",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+
+                    if (isCompact) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(rowSpacing),
                         ) {
-                            Text("最新数据")
+                            OutlinedTextField(
+                                value = directoryPath,
+                                onValueChange = { directoryPath = it },
+                                modifier = Modifier.fillMaxWidth(),
+                                label = { Text("扫描目录") },
+                                singleLine = true,
+                                enabled = !isLoading,
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(rowSpacing),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                ActionButtonsContent(
+                                    isLoading = isLoading,
+                                    showLatestData = scanResult.totalFileCount != 0,
+                                    latestFileAvailable = latestFileInfo != null,
+                                    onScanClick = { launchScan(directoryPath) },
+                                    onResetClick = {
+                                        directoryPath = XlsxScanner.defaultRootPath()
+                                        launchScan(directoryPath)
+                                    },
+                                    onLatestClick = { showLatestDataDialog = true },
+                                    onFindTxtClick = { showTxtFinderDialog = true },
+                                )
+                            }
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(rowSpacing),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            OutlinedTextField(
+                                value = directoryPath,
+                                onValueChange = { directoryPath = it },
+                                modifier = Modifier.weight(0.65f),
+                                label = { Text("扫描目录") },
+                                singleLine = true,
+                                enabled = !isLoading,
+                            )
+                            Row(
+                                modifier = Modifier.weight(0.35f),
+                                horizontalArrangement = Arrangement.spacedBy(rowSpacing, Alignment.End),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                ActionButtonsContent(
+                                    isLoading = isLoading,
+                                    showLatestData = scanResult.totalFileCount != 0,
+                                    latestFileAvailable = latestFileInfo != null,
+                                    onScanClick = { launchScan(directoryPath) },
+                                    onResetClick = {
+                                        directoryPath = XlsxScanner.defaultRootPath()
+                                        launchScan(directoryPath)
+                                    },
+                                    onLatestClick = { showLatestDataDialog = true },
+                                    onFindTxtClick = { showTxtFinderDialog = true },
+                                )
+                            }
                         }
                     }
-                    Button(
-                        onClick = { showTxtFinderDialog = true },
-                        enabled = !isLoading,
-                    ) {
-                        Text("查找TXT")
-                    }
-                }
 
-                HorizontalDivider()
+                    HorizontalDivider()
 
-                SummarySection(
-                    result = scanResult,
-                    isLoading = isLoading,
-                )
+                    SummarySection(
+                        result = scanResult,
+                        isLoading = isLoading,
+                    )
 
-                Text(
-                    text = "文件列表",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
+                    Text(
+                        text = "文件列表",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
 
-                // 文件较多时依然保持流畅滚动，所以这里使用 LazyColumn。
-                if (scanResult.files.isEmpty() && !isLoading) {
-                    EmptyState(message = scanResult.message)
-                } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        items(
-                            items = scanResult.files,
-                            key = { fileInfo -> fileInfo.absolutePath },
-                        ) { fileInfo ->
-                            XlsxFileCard(fileInfo = fileInfo)
+                    if (scanResult.files.isEmpty() && !isLoading) {
+                        EmptyState(message = scanResult.message, height = emptyStateHeight)
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(listSpacing),
+                        ) {
+                            items(
+                                items = scanResult.files,
+                                key = { fileInfo -> fileInfo.absolutePath },
+                            ) { fileInfo ->
+                                XlsxFileCard(fileInfo = fileInfo)
+                            }
                         }
                     }
                 }
@@ -279,11 +309,11 @@ private fun XlsxFileCard(fileInfo: XlsxFileInfo) {
 }
 
 @Composable
-private fun EmptyState(message: String) {
+private fun EmptyState(message: String, height: Dp) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(240.dp),
+            .height(height),
         contentAlignment = Alignment.Center,
     ) {
         Column(
@@ -301,5 +331,43 @@ private fun EmptyState(message: String) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
+    }
+}
+
+@Composable
+private fun ActionButtonsContent(
+    isLoading: Boolean,
+    showLatestData: Boolean,
+    latestFileAvailable: Boolean,
+    onScanClick: () -> Unit,
+    onResetClick: () -> Unit,
+    onLatestClick: () -> Unit,
+    onFindTxtClick: () -> Unit,
+) {
+    Button(
+        onClick = onScanClick,
+        enabled = !isLoading,
+    ) {
+        Text("开始扫描")
+    }
+    TextButton(
+        onClick = onResetClick,
+        enabled = !isLoading,
+    ) {
+        Text("恢复默认")
+    }
+    if (showLatestData) {
+        Button(
+            onClick = onLatestClick,
+            enabled = !isLoading && latestFileAvailable,
+        ) {
+            Text("最新数据")
+        }
+    }
+    Button(
+        onClick = onFindTxtClick,
+        enabled = !isLoading,
+    ) {
+        Text("查找TXT")
     }
 }
