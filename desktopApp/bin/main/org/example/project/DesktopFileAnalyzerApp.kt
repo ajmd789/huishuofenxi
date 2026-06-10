@@ -36,6 +36,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+import org.example.project.TopButtonBar
+
 /**
  * macOS 桌面首页。
  *
@@ -80,8 +82,19 @@ fun DesktopFileAnalyzerApp() {
         }
     }
 
+
+    val topButtons = remember {
+        listOf(
+            TopBarButton(text = "导入", onClick = { /* TODO */ }),
+            TopBarButton(text = "导出", onClick = { /* TODO */ }),
+            TopBarButton(text = "设置", onClick = { /* TODO */ }),
+            TopBarButton(text = "关于", onClick = { /* TODO */ })
+        )
+    }
+
     // 首次打开桌面应用时，自动扫描默认目录，减少第一次操作步骤。
     LaunchedEffect(Unit) {
+
         launchScan(directoryPath)
     }
 
@@ -101,6 +114,11 @@ fun DesktopFileAnalyzerApp() {
                         .padding(pagePadding),
                     verticalArrangement = Arrangement.spacedBy(sectionSpacing),
                 ) {
+
+                    TopButtonBar(
+                        buttons = topButtons,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                     Text(
                         text = "Excel 文件分析器",
                         style = MaterialTheme.typography.headlineMedium,
