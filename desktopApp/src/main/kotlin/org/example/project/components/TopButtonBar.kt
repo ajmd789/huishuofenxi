@@ -11,6 +11,7 @@
  */
 package org.example.project
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,6 +21,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -46,12 +48,14 @@ fun TopButtonBar(
                 modifier = Modifier
                     .fillMaxWidth(0.1f)   // 每个按钮占10%宽度
                     .fillMaxHeight(),
-                contentPadding = ButtonDefaults.ButtonWithIconContentPadding
+                contentPadding = PaddingValues(0.dp)
             ) {
                 Text(
                     text = button.text,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+//                    modifier = Modifier.fillMaxWidth(),          // 让文本占满按钮宽度
+//                    textAlign = TextAlign.Center
                 )
             }
         }
