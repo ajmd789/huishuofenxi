@@ -15,6 +15,10 @@ dependencies {
     implementation(libs.apache.poi.ooxml)
 
     implementation(libs.compose.uiToolingPreview)
+    // 核心导航库
+    implementation("cafe.adriel.voyager:voyager-navigator:1.0.0")
+    // 页面切换动画库 (可选，但推荐，很丝滑)
+    implementation("cafe.adriel.voyager:voyager-transitions:1.0.0")
     testImplementation(libs.junit)
 }
 

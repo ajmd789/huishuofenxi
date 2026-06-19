@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-
+import androidx.compose.foundation.text.selection.SelectionContainer
 import org.example.project.TopButtonBar
 
 /**
@@ -48,7 +48,9 @@ import org.example.project.TopButtonBar
  * 4. 把文件详情以列表形式展示出来
  */
 @Composable
-fun DesktopFileAnalyzerApp() {
+fun DesktopFileAnalyzerApp(
+    onNavigateToHot: () -> Unit
+) {
     val coroutineScope = rememberCoroutineScope()
 
     // 顶层状态都放在界面入口，便于后续逐步替换成 ViewModel 或状态容器。
@@ -88,7 +90,7 @@ fun DesktopFileAnalyzerApp() {
             TopBarButton(text = "导入", onClick = { /* TODO */ }),
             TopBarButton(text = "导出", onClick = { /* TODO */ }),
             TopBarButton(text = "设置", onClick = { /* TODO */ }),
-            TopBarButton(text = "关于", onClick = { /* TODO */ })
+            TopBarButton(text = "热度", onClick = { onNavigateToHot() })
         )
     }
 
@@ -254,41 +256,44 @@ private fun SummarySection(result: XlsxScanResult, isLoading: Boolean) {
         tonalElevation = 2.dp,
         shape = MaterialTheme.shapes.medium,
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
+        SelectionContainer {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    text = "扫描摘要",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                )
-                if (isLoading) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(18.dp),
-                            strokeWidth = 2.dp,
-                        )
-                        Text("扫描中...")
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        text = "扫描摘要",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                    if (isLoading) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                strokeWidth = 2.dp,
+                            )
+                            Text("扫描中...")
+                        }
                     }
                 }
-            }
 
-            Text("当前目录: ${result.rootPath}")
-            Text("状态: ${result.message}")
-            Text("文件数: ${result.totalFileCount}")
-            Text("Sheet 总数: ${result.totalSheetCount}")
-            Text("总行数: ${result.totalRowCount}")
-            Text("失败文件数: ${result.failedFileCount}")
+                Text("当前目录: ${result.rootPath}")
+                Text("状态: ${result.message}")
+                Text("文件数: ${result.totalFileCount}")
+                Text("Sheet 总数: ${result.totalSheetCount}")
+                Text("总行数: ${result.totalRowCount}")
+                Text("失败文件数: ${result.failedFileCount}")
+            }
         }
+
     }
 }
 
