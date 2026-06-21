@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +28,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.lazy.rememberLazyListState
+
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +43,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.compose.foundation.text.selection.SelectionContainer
 import org.example.project.TopButtonBar
+import androidx.compose.foundation.VerticalScrollbar
 
 /**
  * macOS 桌面首页。
@@ -72,6 +78,8 @@ fun DesktopFileAnalyzerApp(
             ),
         )
     }
+
+
     val latestFileInfo = scanResult.files.firstOrNull()
 
     fun launchScan(path: String) {
@@ -216,19 +224,32 @@ fun DesktopFileAnalyzerApp(
                     if (scanResult.files.isEmpty() && !isLoading) {
                         EmptyState(message = scanResult.message, height = emptyStateHeight)
                     } else {
-                        LazyColumn(
+                        val listState = rememberLazyListState()
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .weight(1f),
-                            verticalArrangement = Arrangement.spacedBy(listSpacing),
-                        ) {
-                            items(
-                                items = scanResult.files,
-                                key = { fileInfo -> fileInfo.absolutePath },
-                            ) { fileInfo ->
-                                XlsxFileCard(fileInfo = fileInfo)
+                                .weight(1f)
+                        ){
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                verticalArrangement = Arrangement.spacedBy(listSpacing),
+                            ) {
+                                items(
+                                    items = scanResult.files,
+                                    key = { fileInfo -> fileInfo.absolutePath },
+                                ) { fileInfo ->
+                                    XlsxFileCard(fileInfo = fileInfo)
+                                }
                             }
+                            VerticalScrollbar(
+                                adapter = rememberScrollbarAdapter(listState),
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                                    .fillMaxHeight()
+                            )
                         }
+
                     }
                 }
             }
