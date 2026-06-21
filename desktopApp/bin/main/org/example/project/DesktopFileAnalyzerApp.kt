@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -291,6 +292,20 @@ private fun SummarySection(result: XlsxScanResult, isLoading: Boolean) {
                 Text("Sheet 总数: ${result.totalSheetCount}")
                 Text("总行数: ${result.totalRowCount}")
                 Text("失败文件数: ${result.failedFileCount}")
+                if (result.failedFileCount > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        result.files.filter { it.errorMessage != null }.forEach { failedFile ->
+                            Text(
+                                text = "失败文件: ${failedFile.absolutePath}，原因: ${failedFile.errorMessage}",
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
+                }
             }
         }
 

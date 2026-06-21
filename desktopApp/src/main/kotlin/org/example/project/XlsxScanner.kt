@@ -125,8 +125,18 @@ object XlsxScanner {
     }
 
     private fun isSupportedXlsxFile(path: Path): Boolean {
+//        val fileName = path.name
+//        return path.extension.equals("xlsx", ignoreCase = true) && !fileName.startsWith("~$")
+        //第一步： 只关心 .xlsx拓展名的普通文件
+        if(!path.extension.equals("xlsx", ignoreCase = true)) return false
         val fileName = path.name
-        return path.extension.equals("xlsx", ignoreCase = true) && !fileName.startsWith("~$")
+        //第二步：过滤各类临时文件与隐藏文件
+        //windows office 临时文件以"~$"开头
+        if(fileName.startsWith("~$")) return false
+        //Macos  以“.~”开头
+        if(fileName.startsWith(".~")) return false
+        if(fileName.startsWith(".")) return false
+        return true
     }
 
     private fun readXlsxFile(path: Path): XlsxFileInfo {
