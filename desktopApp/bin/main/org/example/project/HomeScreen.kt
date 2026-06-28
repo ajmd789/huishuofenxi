@@ -30,7 +30,10 @@ class HomeScreen(private val windowState: WindowState) : Screen {
 
                     // 2. 跳转到 GetHotScreen
                     navigator.push(GetHotScreen(windowState))
-                }
+                },
+                onNavigateToSingleFileContent = { files ->
+                    navigator.push(SingleFileContentScreen(files = files))
+                },
             )
 
             // 2. 在老界面下面（或者你代码的任意按钮里），加一个跳转动作

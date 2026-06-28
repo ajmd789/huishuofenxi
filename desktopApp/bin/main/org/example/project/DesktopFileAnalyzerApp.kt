@@ -1,49 +1,38 @@
 package org.example.project
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-
-import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.lazy.rememberLazyListState
-
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import androidx.compose.foundation.text.selection.SelectionContainer
-import org.example.project.TopButtonBar
-import androidx.compose.foundation.VerticalScrollbar
 
 /**
  * macOS 桌面首页。
@@ -56,7 +45,8 @@ import androidx.compose.foundation.VerticalScrollbar
  */
 @Composable
 fun DesktopFileAnalyzerApp(
-    onNavigateToHot: () -> Unit
+    onNavigateToHot: () -> Unit,
+    onNavigateToSingleFileContent: (List<XlsxFileInfo>) -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -78,8 +68,6 @@ fun DesktopFileAnalyzerApp(
             ),
         )
     }
-
-
     val latestFileInfo = scanResult.files.firstOrNull()
 
     fun launchScan(path: String) {
@@ -92,20 +80,20 @@ fun DesktopFileAnalyzerApp(
             isLoading = false
         }
     }
-
-
-    val topButtons = remember {
-        listOf(
-            TopBarButton(text = "导入", onClick = { /* TODO */ }),
-            TopBarButton(text = "导出", onClick = { /* TODO */ }),
-            TopBarButton(text = "设置", onClick = { /* TODO */ }),
-            TopBarButton(text = "热度", onClick = { onNavigateToHot() })
-        )
-    }
+    val topButtons = listOf(
+        TopBarButton(text = "导入", onClick = { /* TODO */ }),
+        TopBarButton(text = "导出", onClick = { /* TODO */ }),
+        TopBarButton(text = "设置", onClick = { /* TODO */ }),
+        TopBarButton(text = "热度", onClick = { onNavigateToHot() }),
+        TopBarButton(
+            text = "单文件内容",
+            onClick = { onNavigateToSingleFileContent(scanResult.files) },
+            enabled = scanResult.files.isNotEmpty(),
+        ),
+    )
 
     // 首次打开桌面应用时，自动扫描默认目录，减少第一次操作步骤。
     LaunchedEffect(Unit) {
-
         launchScan(directoryPath)
     }
 
@@ -245,11 +233,11 @@ fun DesktopFileAnalyzerApp(
                             }
                             VerticalScrollbar(
                                 adapter = rememberScrollbarAdapter(listState),
-                                modifier = Modifier.align(Alignment.CenterEnd)
+                                modifier = Modifier
+                                    .align(Alignment.CenterEnd)
                                     .fillMaxHeight()
                             )
                         }
-
                     }
                 }
             }
@@ -268,165 +256,5 @@ fun DesktopFileAnalyzerApp(
             initialPath = directoryPath,
             onDismissRequest = { showTxtFinderDialog = false },
         )
-    }
-}
-
-@Composable
-private fun SummarySection(result: XlsxScanResult, isLoading: Boolean) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        tonalElevation = 2.dp,
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        SelectionContainer {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "扫描摘要",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    if (isLoading) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(18.dp),
-                                strokeWidth = 2.dp,
-                            )
-                            Text("扫描中...")
-                        }
-                    }
-                }
-
-                Text("当前目录: ${result.rootPath}")
-                Text("状态: ${result.message}")
-                Text("文件数: ${result.totalFileCount}")
-                Text("Sheet 总数: ${result.totalSheetCount}")
-                Text("总行数: ${result.totalRowCount}")
-                Text("失败文件数: ${result.failedFileCount}")
-                if (result.failedFileCount > 0) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        result.files.filter { it.errorMessage != null }.forEach { failedFile ->
-                            Text(
-                                text = "失败文件: ${failedFile.absolutePath}，原因: ${failedFile.errorMessage}",
-                                style = MaterialTheme.typography.bodySmall,
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-    }
-}
-
-@Composable
-private fun XlsxFileCard(fileInfo: XlsxFileInfo) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        tonalElevation = 1.dp,
-        shape = MaterialTheme.shapes.medium,
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) {
-            Text(
-                text = fileInfo.fileName,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text("路径: ${fileInfo.absolutePath}")
-            Text("大小: ${fileInfo.sizeBytes.formatFileSize()}")
-            Text("修改时间: ${fileInfo.lastModified.formatForDisplay()}")
-            Text("Sheet 数: ${fileInfo.sheetCount}")
-            Text("首个 Sheet: ${fileInfo.firstSheetName ?: "-"}")
-            Text("总行数: ${fileInfo.totalRows}")
-            Text("最大列数: ${fileInfo.maxColumns}")
-            Text("状态: ${fileInfo.status}")
-            if (fileInfo.errorMessage != null) {
-                Text(
-                    text = "错误信息: ${fileInfo.errorMessage}",
-                    color = MaterialTheme.colorScheme.error,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun EmptyState(message: String, height: Dp) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(height),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = "暂无可展示的 Excel 文件",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionButtonsContent(
-    isLoading: Boolean,
-    showLatestData: Boolean,
-    latestFileAvailable: Boolean,
-    onScanClick: () -> Unit,
-    onResetClick: () -> Unit,
-    onLatestClick: () -> Unit,
-    onFindTxtClick: () -> Unit,
-) {
-    Button(
-        onClick = onScanClick,
-        enabled = !isLoading,
-    ) {
-        Text("开始扫描")
-    }
-    TextButton(
-        onClick = onResetClick,
-        enabled = !isLoading,
-    ) {
-        Text("恢复默认")
-    }
-    if (showLatestData) {
-        Button(
-            onClick = onLatestClick,
-            enabled = !isLoading && latestFileAvailable,
-        ) {
-            Text("最新数据")
-        }
-    }
-    Button(
-        onClick = onFindTxtClick,
-        enabled = !isLoading,
-    ) {
-        Text("查找TXT")
     }
 }
